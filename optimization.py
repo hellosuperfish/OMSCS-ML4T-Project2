@@ -40,8 +40,8 @@ import scipy.optimize as sco
 # This is the function that will be tested by the autograder  		  	   		   	 		  		  		    	 		 		   		 		  
 # The student must update this code to properly implement the functionality  		  	   		   	 		  		  		    	 		 		   		 		  
 def optimize_portfolio(  		  	   		   	 		  		  		    	 		 		   		 		  
-    sd=dt.datetime(2008, 1, 1),
-    ed=dt.datetime(2009, 1, 1),
+    sd=dt.datetime(2008, 6, 1),
+    ed=dt.datetime(2009, 6, 1),
     syms=["GOOG", "AAPL", "GLD", "XOM"],  		  	   		   	 		  		  		    	 		 		   		 		  
     gen_plot=False,  		  	   		   	 		  		  		    	 		 		   		 		  
 ):  		  	   		   	 		  		  		    	 		 		   		 		  
@@ -73,11 +73,13 @@ def optimize_portfolio(
     prices = prices_all[syms]  # only portfolio symbols  		  	   		   	 		  		  		    	 		 		   		 		  
     prices_SPY = prices_all["SPY"]  # only SPY, for comparison later  		  	   		   	 		  		  		    	 		 		   		 		  
 
-   
 
-    #calculate daily returns
+
+    #define variables
     noa = len(syms)
     allocs = np.array(noa*[1./noa,])
+
+    #calculate normalized daily returns
     def daily_return_alloc(df,allocs):
 
         prices_normed = df/df.iloc[0]
@@ -95,17 +97,18 @@ def optimize_portfolio(
 
 
 
-
+    #define parameters and run optimize function
     cons = ({'type': 'eq', 'fun':lambda x: np.sum(x) - 1})
     bnds = tuple((0,1) for x in range(noa))
     opts = sco.minimize(min_func_sharpe, allocs,method = 'SLSQP', bounds = bnds, constraints = cons, args = (prices))
 
-    # add code here to find the allocations
+    # store the new allocations
     new_allocs = opts['x']
 
 
 
-
+    #recalculate statistics: Portfolio values, Position values, daily returns for portfolio, cumultaive returns
+    #average daily return, volatility, Sharpe Ratio.
     normed = prices/prices.iloc[0]
     pos_vals = normed*new_allocs
     port_val = pos_vals.sum(axis =1)
@@ -116,8 +119,7 @@ def optimize_portfolio(
     sr = np.sqrt(252)* adr/sddr
 
 
-    # Get daily portfolio value  		  	   		   	 		  		  		    	 		 		   		 		  
-    #port_val = (prices/prices[0])*new_allocs  # add code here to compute daily portfolio values
+
   		  	   		   	 		  		  		    	 		 		   		 		  
     # Compare daily portfolio value with SPY using a normalized plot  		  	   		   	 		  		  		    	 		 		   		 		  
     if gen_plot:  		  	   		   	 		  		  		    	 		 		   		 		  
@@ -126,7 +128,7 @@ def optimize_portfolio(
         df_temp = pd.concat(  		  	   		   	 		  		  		    	 		 		   		 		  
             [port_val, prices_SPY], keys=["Portfolio", "SPY"], axis=1  		  	   		   	 		  		  		    	 		 		   		 		  
         )
-        ax = df_temp.plot(title="Daily Portfolio vs. SPY", fontsize = 12)
+        ax = df_temp.plot(title="Daily Portfolio and SPY", fontsize = 12)
         ax.set_xlabel("Date")
         ax.set_ylabel("Normalized Price")
         plt.savefig("Figure1.png")
@@ -148,7 +150,7 @@ def test_code():
 
     # Assess the portfolio
     allocations, cr, adr, sddr, sr = optimize_portfolio(
-        sd=start_date, ed=end_date, syms=symbols, gen_plot=False
+        sd=start_date, ed=end_date, syms=symbols, gen_plot=True
     )
 
     # Print statistics
