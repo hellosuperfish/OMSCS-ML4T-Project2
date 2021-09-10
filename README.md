@@ -1,2 +1,2 @@
 # OMSCS
-For OMSCS class ML4T- Project 2
+Code for ML4T Class.
